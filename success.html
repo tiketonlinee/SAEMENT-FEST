@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SAEMENTFEST</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{background:linear-gradient(180deg,#13071d,#1f1030,#13071d);min-height:100vh;padding:25px;color:#fff}
+.container{max-width:900px;margin:auto}
+.success-box{text-align:center;margin-bottom:25px}
+.success-icon{width:90px;height:90px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:42px;margin:auto auto 15px;box-shadow:0 0 30px rgba(34,197,94,.4)}
+.success-title{font-size:30px;font-weight:800}
+.success-sub{opacity:.8;margin-top:8px}
+.ticket{margin-top:30px;background:rgba(255,255,255,.08);backdrop-filter:blur(18px);border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.ticket-header{padding:30px;text-align:center;background:linear-gradient(135deg,#A74FFF,#FF8FE5)}
+.ticket-header img{max-width:220px;width:100%;margin-bottom:15px}
+.ticket-header h1{font-size:26px;font-weight:800}
+.ticket-body{padding:30px}
+.row{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px dashed rgba(255,255,255,.15);gap:20px}
+.label{opacity:.7}
+.value{font-weight:700;text-align:right}
+.ticket-code{margin-top:25px;padding:18px;border-radius:18px;background:#241334;text-align:center}
+.ticket-code span{display:block;font-size:13px;opacity:.8;margin-bottom:8px}
+.ticket-code h2{font-size:28px;letter-spacing:2px;color:#FFB4F0}
+.qr-wrap{margin-top:25px;display:flex;justify-content:center}
+#qrcode{background:#fff;padding:14px;border-radius:18px}
+.actions{margin-top:25px;display:flex;flex-wrap:wrap;gap:12px}
+.btn{flex:1;padding:16px;border:none;border-radius:16px;font-weight:700;cursor:pointer}
+.download{background:linear-gradient(135deg,#A74FFF,#FF8FE5);color:#fff}
+.home{background:#fff;color:#111}
+.note{margin-top:25px;padding:18px;border-radius:16px;background:rgba(255,255,255,.06);font-size:14px;line-height:1.7}
+@media(max-width:600px){.row{flex-direction:column}.value{text-align:left}.ticket-header h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="success-box">
+<div class="success-icon">✓</div>
+<div class="success-title">Pembayaran Berhasil</div>
+<div class="success-sub">E-Ticket berhasil dibuat.</div>
+</div>
+
+<div class="ticket" id="ticketArea">
+<div class="ticket-header">
+<img src="logo-never.png" alt="Logo">
+<h1>SAEMENTFEST ID 2026</h1>
+<p>SAEMENTFEST</p>
+</div>
+
+<div class="ticket-body">
+<div class="row"><div class="label">Nama Pemesan</div><div class="value" id="nama"></div></div>
+<div class="row"><div class="label">Jenis Tiket</div><div class="value" id="jenis"></div></div>
+<div class="row"><div class="label">Jumlah Tiket</div><div class="value" id="jumlah"></div></div>
+<div class="row"><div class="label">Total Pembayaran</div><div class="value" id="total"></div></div>
+
+<div class="ticket-code">
+<span>KODE TIKET</span>
+<h2 id="kodeTiket"></h2>
+</div>
+
+<div class="qr-wrap"><div id="qrcode"></div></div>
+
+<div class="note">
+<b>Petunjuk Masuk Event</b><br>
+• Simpan halaman ini.<br>
+• Tunjukkan QR Code saat check-in.<br>
+• QR Code hanya berlaku untuk satu tiket yang sah.<br>
+• Dilarang menggandakan tiket.
+</div>
+</div>
+</div>
+
+<div class="actions">
+<button class="btn download" onclick="downloadTicket()">DOWNLOAD TIKET</button>
+<button class="btn home" onclick="location.href='index.html'">KEMBALI KE BERANDA</button>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+const nama = localStorage.getItem('nama') || localStorage.getItem('draft_nama') || 'Pengunjung';
+const email = localStorage.getItem('email') || localStorage.getItem('draft_email') || '';
+const whatsapp = localStorage.getItem('whatsapp') || localStorage.getItem('draft_wa') || '';
+const jenis = localStorage.getItem('jenisTiket') || '-';
+const jumlah = localStorage.getItem('jumlahTiket') || '0';
+const total = localStorage.getItem('totalPembayaran') || '0';
+
+localStorage.setItem('nama', nama);
+localStorage.setItem('email', email);
+localStorage.setItem('whatsapp', whatsapp);
+
+document.getElementById('nama').innerText = nama;
+document.getElementById('jenis').innerText = jenis;
+document.getElementById('jumlah').innerText = jumlah + ' Tiket';
+document.getElementById('total').innerText = 'Rp ' + Number(total).toLocaleString('id-ID');
+
+let kodeTiket = localStorage.getItem('kodeTiket');
+
+if(!kodeTiket){
+    kodeTiket = 'SAEMENTFEST-' + Math.random().toString(36).substring(2,8).toUpperCase();
+    localStorage.setItem('kodeTiket', kodeTiket);
+}
+
+document.getElementById('kodeTiket').innerText = kodeTiket;
+
+new QRCode(document.getElementById('qrcode'),{
+    text:kodeTiket,
+    width:220,
+    height:220
+});
+
+function downloadTicket(){
+    html2canvas(document.getElementById('ticketArea')).then(canvas=>{
+        const link=document.createElement('a');
+        link.download='E-TICKET-'+kodeTiket+'.png';
+        link.href=canvas.toDataURL();
+        link.click();
+    });
+}
+
+emailjs.init({
+    publicKey:"Lr_rH5mU3hSgfno1g"
+});
+
+async function kirimETicket(){
+    if(localStorage.getItem('emailSent') === 'true') return;
+
+    try{
+        await emailjs.send(
+            "service_js4dbeg",
+            "template_6xcn2pq",
+            {
+                nama:nama,
+                email:email,
+                whatsapp:whatsapp,
+                jenis_tiket:jenis,
+                jumlah_tiket:jumlah,
+                total_bayar:total,
+                kode_tiket:kodeTiket
+            }
+        );
+
+        localStorage.setItem('emailSent','true');
+        console.log('E-Ticket berhasil dikirim');
+    }catch(error){
+        console.error(error);
+    }
+}
+
+window.addEventListener('load', kirimETicket);
+</script>
+</body>
+</html>
