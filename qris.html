@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SampoernaFest Medan - SMB - QRIS Pembayaran</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+
+body{
+min-height:100vh;
+overflow-x:hidden;
+padding:15px;
+background:linear-gradient(-45deg,#020617,#0f172a,#1e3a8a,#2563eb,#60a5fa);
+background-size:500% 500%;
+animation:bgMove 15s ease infinite;
+color:#fff;
+}
+
+@keyframes bgMove{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+
+.container{max-width:780px;margin:auto}
+
+.card{
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(22px);
+border:1px solid rgba(255,255,255,.12);
+border-radius:30px;
+padding:24px;
+margin-bottom:18px;
+box-shadow:0 20px 45px rgba(0,0,0,.35);
+animation:fade .6s ease;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(20px)}
+to{opacity:1;transform:none}
+}
+
+.logo{
+text-align:center;
+margin-bottom:20px;
+}
+
+.logoEvent{
+width:100%;
+max-width:350px;
+height:auto;
+display:block;
+margin:auto;
+filter:
+drop-shadow(0 0 10px rgba(96,165,250,.8))
+drop-shadow(0 0 25px rgba(96,165,250,.6));
+animation:logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoFloat{
+0%,100%{
+transform:translateY(0);
+}
+50%{
+transform:translateY(-8px);
+}
+}
+
+.order{
+color:#60a5fa;
+font-weight:800;
+}
+
+.total{
+font-size:2.7rem;
+font-weight:900;
+}
+
+.timerBox{
+text-align:center;
+padding:18px;
+border-radius:25px;
+background:rgba(255,215,0,.08);
+border:1px solid rgba(255,215,0,.25);
+}
+
+.timer{
+font-size:3rem;
+font-weight:900;
+color:#60a5fa;
+text-shadow:0 0 25px #60a5fa;
+}
+
+.qrCard{text-align:center}
+
+.qrWrap{
+display:inline-block;
+background:#fff;
+padding:18px;
+border-radius:25px;
+box-shadow:0 10px 35px rgba(0,0,0,.35);
+}
+
+.qrWrap img{
+width:300px;
+max-width:100%;
+display:block;
+}
+
+.totalGlow{
+margin-top:15px;
+font-size:3rem;
+font-weight:900;
+text-shadow:
+0 0 15px #60a5fa,
+0 0 35px #60a5fa,
+0 0 55px #60a5fa;
+animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+50%{transform:scale(1.04)}
+}
+
+.uploadArea{
+border:3px dashed #60a5fa;
+border-radius:25px;
+padding:30px;
+text-align:center;
+cursor:pointer;
+background:rgba(96,165,250,.08);
+transition:.3s;
+}
+
+.uploadArea:hover{
+transform:translateY(-3px);
+box-shadow:0 0 30px rgba(96,165,250,.6);
+}
+
+.uploadIcon{
+font-size:75px;
+}
+
+.preview{
+display:none;
+margin-top:18px;
+padding:15px;
+border-radius:20px;
+background:rgba(255,255,255,.08);
+}
+
+.preview img{
+width:100%;
+max-height:350px;
+object-fit:contain;
+border-radius:15px;
+}
+
+.success{
+margin-top:10px;
+font-weight:700;
+color:#22c55e;
+}
+
+.checkbox{
+margin-top:18px;
+display:flex;
+gap:10px;
+align-items:flex-start;
+}
+
+button{
+width:100%;
+padding:18px;
+border:none;
+border-radius:18px;
+font-weight:800;
+font-size:16px;
+cursor:pointer;
+background:linear-gradient(135deg,#60a5fa,#2563eb);
+color:#fff;
+transition:.3s;
+}
+
+button:hover{
+transform:translateY(-2px);
+}
+
+button:disabled{
+opacity:.4;
+cursor:not-allowed;
+}
+
+.loading{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.92);
+z-index:99999;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+}
+
+.spinner{
+width:90px;
+height:90px;
+border:6px solid rgba(255,255,255,.15);
+border-top:6px solid #60a5fa;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+to{transform:rotate(360deg)}
+}
+
+@media(max-width:600px){
+.timer{font-size:2.2rem}
+.total,.totalGlow{font-size:2rem}
+.uploadIcon{font-size:55px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<img src="logo-saement.png" alt="semesta merestui"
+class="logoEvent">
+</div>
+
+<div class="card">
+<div>ORDER ID</div>
+<div id="orderId" class="order">-</div>
+<br>
+
+<div>TOTAL PEMBAYARAN</div>
+<div id="total" class="total">Rp 0</div>
+
+<br>
+
+<div>Jenis Tiket : <span id="jenisTiket">-</span></div>
+<div>Jumlah Tiket : <span id="jumlahTiket">0</span></div>
+<div>Nama : <span id="namaPemesan">-</span></div>
+<div>WhatsApp : <span id="waPemesan">-</span></div>
+</div>
+
+<div class="card qrCard">
+
+<div class="timerBox">
+<div>Selesaikan pembayaran dalam</div>
+<div id="timer" class="timer">03:00</div>
+</div>
+
+<br>
+
+<div class="qrWrap">
+<img src="qris-saement.png" alt="QRIS">
+</div>
+
+<div id="totalGlow" class="totalGlow">Rp 0</div>
+
+</div>
+
+<div class="card">
+
+<label for="file">
+<div class="uploadArea">
+<div class="uploadIcon">📤</div>
+<h2>UPLOAD BUKTI PEMBAYARAN</h2>
+<p>Klik area ini untuk memilih bukti transfer QRIS</p>
+<p>JPG • PNG • JPEG</p>
+</div>
+</label>
+
+<input id="file" hidden type="file" accept="image/*">
+
+<div id="preview" class="preview">
+<img id="previewImg">
+<div id="fileName"></div>
+<div class="success">✅ Bukti pembayaran berhasil dipilih</div>
+</div>
+
+<div class="checkbox">
+<input type="checkbox" id="cek">
+<label for="cek">
+Saya menyatakan telah melakukan pembayaran dan mengunggah bukti pembayaran yang valid.
+</label>
+</div>
+
+<br>
+
+<button id="btn" disabled>
+KONFIRMASI PEMBAYARAN
+</button>
+
+</div>
+
+</div>
+
+<div id="loading" class="loading">
+<div class="spinner"></div>
+<h2 style="margin-top:20px">Memproses Pembayaran...</h2>
+</div>
+
+<script>
+
+if(!localStorage.getItem('orderId')){
+localStorage.setItem('orderId','SMB-'+Date.now());
+}
+
+document.getElementById('orderId').textContent=localStorage.getItem('orderId');
+
+const total='Rp '+Number(localStorage.getItem('totalPembayaran')||0).toLocaleString('id-ID');
+
+document.getElementById('total').textContent=total;
+document.getElementById('totalGlow').textContent=total;
+
+document.getElementById('jenisTiket').textContent=localStorage.getItem('jenisTiket')||'-';
+document.getElementById('jumlahTiket').textContent=localStorage.getItem('jumlahTiket')||'0';
+document.getElementById('namaPemesan').textContent=localStorage.getItem('nama')||'-';
+document.getElementById('waPemesan').textContent=localStorage.getItem('wa')||'-';
+
+let duration=180;
+
+function timerRun(){
+let m=Math.floor(duration/60);
+let s=duration%60;
+
+document.getElementById('timer').textContent=
+String(m).padStart(2,'0')+':'+
+String(s).padStart(2,'0');
+
+if(duration<=0){
+location.href='failed.html';
+}
+
+duration--;
+}
+
+timerRun();
+setInterval(timerRun,1000);
+
+let uploaded=false;
+
+const file=document.getElementById('file');
+const cek=document.getElementById('cek');
+const btn=document.getElementById('btn');
+
+function checkButton(){
+btn.disabled=!(uploaded && cek.checked);
+}
+
+file.addEventListener('change',function(){
+if(this.files.length){
+
+uploaded=true;
+
+document.getElementById('preview').style.display='block';
+
+document.getElementById('previewImg').src=URL.createObjectURL(this.files[0]);
+
+document.getElementById('fileName').innerHTML='<b>'+this.files[0].name+'</b>';
+
+checkButton();
+}
+});
+
+cek.addEventListener('change',checkButton);
+
+btn.addEventListener('click',()=>{
+
+document.getElementById('loading').style.display='flex';
+
+setTimeout(()=>{
+location.href='success.html';
+},2500);
+
+});
+
+</script>
+
+</body>
+</html>
